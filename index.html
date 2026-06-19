@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#00643C"/>
+<link rel="manifest" href="./manifest.webmanifest"/>
+<link rel="icon" href="./icon-192.png"/>
+<title>Convênios e Cooperação · CFCC/DPE-RN</title>
+<style>
+:root{
+  --verde:#00643C; --verde2:#14A064; --azul:#00648C; --azulc:#78C8DC;
+  --bg:#f4f6f4; --card:#fff; --ink:#15201b; --muted:#5d6b62;
+  --line:#e0e6e1; --ok:#14A064; --warn:#c9870a; --danger:#b3261e; --info:#00648C;
+  --neu:#5d6b62;
+  --shadow:0 1px 2px rgba(0,40,20,.06),0 4px 16px rgba(0,40,20,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.45}
+h1,h2,h3{font-family:Georgia,serif;margin:0}
+a{color:var(--azul)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px 72px}
+header.top{background:linear-gradient(100deg,var(--verde),#004e2f);color:#fff;padding:14px 0 0}
+header.top .wrap{padding-bottom:0}
+.brandrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brandrow .logo{width:42px;height:42px;border-radius:9px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;font-size:18px}
+.brandrow h1{font-size:18px;font-weight:700}
+.brandrow .sub{font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;opacity:.85}
+.syncbar{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px}
+.tabs{display:flex;gap:2px;margin-top:12px;overflow-x:auto}
+.tabs button{background:transparent;border:0;color:#dff2e8;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button.on{color:#fff;border-bottom-color:var(--azulc)}
+.btn{background:var(--verde);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:rgba(255,255,255,.16)}
+.btn.sec{background:#fff;color:var(--verde);border:1px solid var(--line)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.danger{background:var(--danger)}
+.dot{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block}
+.dot.on{background:#7CFFB0}
+section.view{margin-top:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{background:var(--card);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow);border-left:4px solid var(--verde)}
+.kpi.azul{border-left-color:var(--azul)} .kpi.ciano{border-left-color:var(--azulc)}
+.kpi.warn{border-left-color:var(--warn)} .kpi.danger{border-left-color:var(--danger)}
+.kpi.neu{border-left-color:var(--neu)}
+.kpi .lab{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .val{font-size:27px;font-weight:700;font-family:Georgia,serif;line-height:1.1;margin:3px 0}
+.kpi .note{font-size:11.5px;color:var(--muted)}
+.panel{background:var(--card);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);margin-top:14px}
+.panel h2{font-size:16px;color:var(--verde);margin-bottom:2px}
+.panel .desc{font-size:12px;color:var(--muted);margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.bars .b{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+.bars .b .nm{width:150px;color:var(--muted)}
+.bars .b .track{flex:1;height:16px;background:#eef2ee;border-radius:8px;overflow:hidden}
+.bars .b .fill{height:100%;background:var(--verde2);border-radius:8px}
+.bars .b .ct{width:34px;text-align:right;font-weight:700}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 12px}
+.toolbar input[type=search],.toolbar select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff}
+.toolbar input[type=search]{min-width:230px;flex:1}
+table{width:100%;border-collapse:collapse;font-size:12.8px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;padding:8px 9px;border-bottom:2px solid var(--line)}
+td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.grp td{background:#eef4f0;font-family:Georgia,serif;color:var(--verde);font-weight:700;font-size:13px;letter-spacing:.3px}
+tr.row:hover{background:#f7faf8;cursor:pointer}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill.ok{background:#e3f6ec;color:#0c7a44}
+.pill.warn{background:#fcefd6;color:#9a6705}
+.pill.danger{background:#fbe4e2;color:#9a201a}
+.pill.neu{background:#eceeec;color:#5d6b62}
+.pill.info{background:#e1eff5;color:#0c5b7a}
+.badge{display:inline-block;background:#eef2ee;color:var(--muted);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600}
+.badge.dup{background:#fbe4e2;color:#9a201a}
+.muted{color:var(--muted)} .tiny{font-size:11px}
+.alert{display:flex;gap:9px;padding:11px 13px;border-radius:9px;font-size:12.5px;margin:10px 0;align-items:flex-start}
+.alert.i{background:#e1eff5;color:#0c5b7a} .alert.w{background:#fcefd6;color:#7a5200} .alert.d{background:#fbe4e2;color:#7a1a16}
+.alert b{font-weight:700}
+.modal-bg{position:fixed;inset:0;background:rgba(10,28,18,.45);display:none;z-index:50;padding:20px;overflow:auto}
+.modal-bg.on{display:block}
+.modal{max-width:860px;margin:10px auto;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal .mh{position:sticky;top:0;background:linear-gradient(100deg,var(--verde),#004e2f);color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;gap:10px}
+.modal .mh h3{font-size:16px;flex:1}
+.modal .mb{padding:16px 18px}
+.modal .mf{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:#fff;border-radius:0 0 14px 14px}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:3px}
+.fld input,.fld select,.fld textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit}
+.fld textarea{min-height:58px;resize:vertical}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+@media(max-width:640px){.frow,.frow3{grid-template-columns:1fr}}
+.section-t{font-family:Georgia,serif;color:var(--verde);font-size:14px;font-weight:700;margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.subitem{background:#f7faf8;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:8px;font-size:12.5px}
+.subitem .x{float:right;color:var(--danger);cursor:pointer;font-weight:700}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px}
+.numgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.numcard{background:#f7faf8;border:1px solid var(--line);border-radius:10px;padding:13px}
+.numcard h4{font-family:Georgia,serif;color:var(--verde);font-size:14px;margin-bottom:4px}
+.numcard .next{font-size:22px;font-weight:700;font-family:Georgia,serif;color:var(--azul)}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.6}
+.chip{display:inline-flex;gap:5px;align-items:center;background:#eef2ee;border-radius:7px;padding:3px 8px;font-size:11.5px;margin:2px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="logo">CF</div>
+      <div>
+        <h1>Convênios, Acordos e Termos de Cooperação</h1>
+        <div class="sub">CFCC · Defensoria Pública do Estado do RN</div>
+      </div>
+      <div class="syncbar">
+        <span class="dot" id="syncDot"></span>
+        <span id="syncTxt" class="muted" style="color:#dff2e8">Local</span>
+        <button class="btn ghost sm" id="btnSync">Conectar OneDrive</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-v="painel" class="on">Painel</button>
+      <button data-v="lista">Instrumentos</button>
+      <button data-v="numeracoes">Numerações</button>
+      <button data-v="servidores">Servidores cedidos</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="view" id="view"></section>
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+
+<script>
+/* ============== ESTADO / PERSISTÊNCIA ============== */
+var KEY='cfcc_convenios', KSV='cfcc_servidores', KTOMB='cfcc_conv_tomb', KUID='cfcc_uid';
+var SEED=[];           // base pública vazia (GitHub). Dados reais vêm do OneDrive (convenios.json).
+var SEED_SV=[];
+var TODAY=new Date(); TODAY.setHours(0,0,0,0);
+
+function uid(){ var u=localStorage.getItem(KUID); if(!u){u='u'+Math.random().toString(36).slice(2,8);localStorage.setItem(KUID,u);} return u; }
+function loadArr(k,seed){ try{var s=localStorage.getItem(k); return s?JSON.parse(s):seed.slice();}catch(e){return seed.slice();} }
+function saveArr(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+function tombs(){ return loadArr(KTOMB,[]); }
+function addTomb(id){ var t=tombs(); if(t.indexOf(id)<0){t.push(id);saveArr(KTOMB,t);} }
+
+var DB=loadArr(KEY,SEED);
+var SV=loadArr(KSV,SEED_SV);
+var VIEW='painel';
+
+/* ============== UTIL ============== */
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function fmtD(iso){ if(!iso) return '—'; var p=String(iso).slice(0,10).split('-'); if(p.length<3) return '—'; return p[2]+'/'+p[1]+'/'+p[0]; }
+function fmtMoney(v){ if(v==null||isNaN(v)) return '—'; return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function days(iso){ if(!iso) return null; var d=new Date(String(iso).slice(0,10)); if(isNaN(d)) return null; return Math.round((d-TODAY)/86400000); }
+function instrLabel(t){ return {CONVENIO:'Convênio',ACT:'Acordo de Cooperação Técnica',TCT:'Termo de Cooperação Técnica',CESSAO_IMOVEL:'Cessão de Uso de Imóvel'}[t]||t; }
+function instrShort(t){ return {CONVENIO:'Convênio',ACT:'ACT',TCT:'TCT',CESSAO_IMOVEL:'Cessão imóvel'}[t]||t; }
+
+/* Situação efetiva (calculada; não sobrescreve a gravada) */
+function sitEf(r){
+  var g=(r.situacaoGravada||'').toUpperCase();
+  if(/ARQUIV|CONCLU|FINALIZ/.test(g)) return 'CONCLUÍDO';
+  if(!r.vigenciaInicio && !r.vigenciaFim) return 'PENDENTE';
+  var d=days(r.vigenciaFim);
+  if(d!=null && d<0) return 'VENCIDO';
+  if(g==='VENCIDO' && d==null) return 'VENCIDO';
+  if(g==='RENEGOCIAR') return 'RENEGOCIAR';
+  if(!r.vigenciaFim) return 'VIGENTE';
+  if(d!=null && d<=90) return 'A VENCER';
+  return 'VIGENTE';
+}
+function ativo(r){ var s=sitEf(r); return s!=='VENCIDO' && s!=='CONCLUÍDO'; }
+function sitPill(s){
+  var m={'VIGENTE':'ok','A VENCER':'warn','RENEGOCIAR':'warn','VENCIDO':'danger','CONCLUÍDO':'neu','PENDENTE':'info'};
+  return '<span class="pill '+(m[s]||'neu')+'">'+esc(s)+'</span>';
+}
+function visiveis(){ var t=tombs(); return DB.filter(function(r){return t.indexOf(r.id)<0;}); }
+
+/* ============== RENDER: PAINEL ============== */
+function renderPainel(){
+  var rs=visiveis();
+  var c={vig:0,avenc:0,venc:0,reneg:0,pend:0,conc:0};
+  rs.forEach(function(r){var s=sitEf(r);
+    if(s==='VIGENTE')c.vig++; else if(s==='A VENCER')c.avenc++; else if(s==='VENCIDO')c.venc++;
+    else if(s==='RENEGOCIAR')c.reneg++; else if(s==='PENDENTE')c.pend++; else if(s==='CONCLUÍDO')c.conc++; });
+  var ativos=rs.filter(ativo);
+
+  // por instrumento / categoria (apenas ativos)
+  var byInstr={}, byCat={};
+  ativos.forEach(function(r){ byInstr[r.instrumento]=(byInstr[r.instrumento]||0)+1; byCat[r.categoria||'—']=(byCat[r.categoria||'—']||0)+1; });
+
+  // faixas de vencimento (ativos com data)
+  var fa={venc:0,d30:0,d60:0,d90:0,d180:0,mais:0,semd:0};
+  ativos.forEach(function(r){ var d=days(r.vigenciaFim);
+    if(d==null){fa.semd++;return;} if(d<0)fa.venc++; else if(d<=30)fa.d30++; else if(d<=60)fa.d60++; else if(d<=90)fa.d90++; else if(d<=180)fa.d180++; else fa.mais++; });
+
+  // financeiro (com transferência)
+  var ft=rs.filter(function(r){return r.transfereRecurso;});
+  var totalPrev=0, totalRep=0;
+  ft.forEach(function(r){ totalPrev+=(r.valorConcedente||0)+(r.valorContrapartida||0);
+    (r.parcelas||[]).forEach(function(p){ totalRep+=(p.valor||0); }); });
+
+  var html='<div class="kpis">'
+    +kpi('verde','Vigentes',c.vig,'situação efetiva')
+    +kpi('warn','A vencer (≤90d)',c.avenc,'exigem ação')
+    +kpi('warn','Renegociar',c.reneg,'sinalizados')
+    +kpi('danger','Vencidos',c.venc,'fora dos ativos')
+    +kpi('info','Pendentes',c.pend,'sem vigência definida')
+    +kpi('neu','Total na base',rs.length,(c.conc?c.conc+' concluídos':'instrumentos'))
+    +'</div>';
+
+  if(c.pend>0 || rs.some(function(r){return r._dup;})){
+    var ndup=rs.filter(function(r){return r._dup;}).length;
+    html+='<div class="alert w"><span>⚠</span><div><b>Qualidade da base.</b> '
+      +(c.pend>0?c.pend+' instrumento(s) sem vigência definida (situação <b>PENDENTE</b> — herdada de linhas com datas ausentes na planilha de origem). ':'')
+      +(ndup>0?ndup+' possível(is) duplicata(s) marcada(s) com <b>DUP?</b> na lista. ':'')
+      +'Corrija na ficha de cada instrumento; a correção propaga para o painel.</div></div>';
+  }
+
+  html+='<div class="grid2">';
+  html+='<div class="panel"><h2>Por tipo de instrumento</h2><div class="desc">Somente instrumentos ativos.</div>'+bars(byInstr,ativos.length,instrShort)+'</div>';
+  html+='<div class="panel"><h2>Por categoria</h2><div class="desc">Agrupamento gerencial.</div>'+bars(byCat,ativos.length,null)+'</div>';
+  html+='</div>';
+
+  html+='<div class="panel"><h2>Faixas de vencimento</h2><div class="desc">Instrumentos ativos por proximidade do término da vigência.</div>'
+    +bars({'Vencidos':fa.venc,'≤ 30 dias':fa.d30,'31–60':fa.d60,'61–90':fa.d90,'91–180':fa.d180,'> 180':fa.mais,'Sem data':fa.semd}, ativos.length, null, true)+'</div>';
+
+  html+='<div class="panel"><h2>Convênios com transferência de recursos</h2>'
+    +'<div class="desc">A DPE pode atuar como <b>concedente</b> (repassa) ou <b>convenente</b> (recebe). Valores e parcelas controlados por instrumento — não somáveis aos demais.</div>'
+    +'<div class="kpis">'
+    +kpi('azul','Instrumentos',ft.length,'com recurso')
+    +kpi('verde','Valor total previsto',fmtMoney(totalPrev),'concedente + contrapartida')
+    +kpi('ciano','Liberado (parcelas)',fmtMoney(totalRep),'registrado')
+    +'</div>';
+  if(ft.length){
+    html+='<table style="margin-top:12px"><tr><th>Nº</th><th>Convenente / objeto</th><th>Papel DPE</th><th>Previsto</th><th>Liberado</th><th>Vigência</th></tr>';
+    ft.forEach(function(r){ var lib=0;(r.parcelas||[]).forEach(function(p){lib+=(p.valor||0);});
+      html+='<tr class="row" data-id="'+r.id+'"><td>'+esc(r.numero||'—')+'</td><td>'+esc(r.participe||'')+'<div class="tiny muted">'+esc((r.objeto||'').slice(0,70))+'</div></td>'
+        +'<td>'+(r.papelDPE?'<span class="pill info">'+esc(r.papelDPE)+'</span>':'<span class="muted">—</span>')+'</td>'
+        +'<td>'+fmtMoney((r.valorConcedente||0)+(r.valorContrapartida||0))+'</td><td>'+fmtMoney(lib)+'</td><td>'+fmtD(r.vigenciaFim)+'</td></tr>';
+    });
+    html+='</table>';
+  }
+  html+='</div>';
+
+  // próximos a vencer
+  var prox=ativos.filter(function(r){var d=days(r.vigenciaFim);return d!=null&&d<=90;}).sort(function(a,b){return days(a.vigenciaFim)-days(b.vigenciaFim);});
+  if(prox.length){
+    html+='<div class="panel"><h2>Ação prioritária — vencendo em até 90 dias</h2><table><tr><th>Dias</th><th>Nº</th><th>Partícipe</th><th>Instrumento</th><th>Fim</th><th>Renovar?</th><th>Responsável</th></tr>';
+    prox.forEach(function(r){ var d=days(r.vigenciaFim);
+      html+='<tr class="row" data-id="'+r.id+'"><td><span class="pill '+(d<=30?'danger':'warn')+'">'+d+'</span></td><td>'+esc(r.numero||'—')+'</td><td>'+esc(r.participe||'')+'</td><td>'+esc(instrShort(r.instrumento))+'</td><td>'+fmtD(r.vigenciaFim)+'</td><td>'+esc(r.interesseRenovar||'—')+'</td><td>'+esc(r.responsavel||'—')+'</td></tr>';
+    });
+    html+='</table></div>';
+  }
+  return html;
+}
+function kpi(cls,lab,val,note){ var c={verde:'',azul:'azul',ciano:'ciano',warn:'warn',danger:'danger',neu:'neu',info:'azul'}[cls]||''; return '<div class="kpi '+c+'"><div class="lab">'+esc(lab)+'</div><div class="val">'+esc(val)+'</div><div class="note">'+esc(note||'')+'</div></div>'; }
+function bars(obj,total,labFn,keepOrder){
+  var keys=Object.keys(obj); if(!keepOrder) keys.sort(function(a,b){return obj[b]-obj[a];});
+  var mx=Math.max(1,Math.max.apply(null,keys.map(function(k){return obj[k];})));
+  return '<div class="bars">'+keys.map(function(k){ var v=obj[k]; var nm=labFn?labFn(k):k;
+    return '<div class="b"><div class="nm">'+esc(nm)+'</div><div class="track"><div class="fill" style="width:'+(v/mx*100)+'%"></div></div><div class="ct">'+v+'</div></div>';
+  }).join('')+'</div>';
+}
+
+/* ============== RENDER: LISTA ============== */
+var FILT={q:'',instr:'',cat:'',sit:'',resp:''};
+function renderLista(){
+  var rs=visiveis();
+  var resps={}; rs.forEach(function(r){if(r.responsavel)resps[r.responsavel]=1;});
+  var cats={}; rs.forEach(function(r){if(r.categoria)cats[r.categoria]=1;});
+  var html='<div class="toolbar">'
+    +'<input type="search" id="fq" placeholder="Buscar partícipe, objeto, nº, CNPJ, SEI…" value="'+esc(FILT.q)+'">'
+    +sel('finstr',FILT.instr,[['','Todos instrumentos'],['CONVENIO','Convênio'],['ACT','ACT'],['TCT','TCT'],['CESSAO_IMOVEL','Cessão imóvel']])
+    +sel('fcat',FILT.cat,[['','Todas categorias']].concat(Object.keys(cats).sort().map(function(c){return [c,c];})))
+    +sel('fsit',FILT.sit,[['','Todas situações'],['VIGENTE','Vigente'],['A VENCER','A vencer'],['RENEGOCIAR','Renegociar'],['VENCIDO','Vencido'],['PENDENTE','Pendente'],['CONCLUÍDO','Concluído']])
+    +sel('fresp',FILT.resp,[['','Todos responsáveis']].concat(Object.keys(resps).sort().map(function(c){return [c,c];})))
+    +'<button class="btn sm" id="btnNew">+ Novo</button>'
+    +'<button class="btn sec sm" id="btnExp">Exportar JSON</button>'
+    +'</div>';
+
+  var f=rs.filter(function(r){
+    if(FILT.instr && r.instrumento!==FILT.instr) return false;
+    if(FILT.cat && r.categoria!==FILT.cat) return false;
+    if(FILT.sit && sitEf(r)!==FILT.sit) return false;
+    if(FILT.resp && r.responsavel!==FILT.resp) return false;
+    if(FILT.q){ var q=FILT.q.toLowerCase(); var blob=[r.numero,r.participe,r.objeto,r.cnpj,r.sei,r.processoFisico,r.responsavel].join(' ').toLowerCase(); if(blob.indexOf(q)<0) return false; }
+    return true;
+  });
+  // agrupar por categoria
+  var ORDER=['COM TRANSFERÊNCIA','CESSÃO SERVIDOR','ENSINO','INSTITUCIONAL'];
+  var groups={}; f.forEach(function(r){var c=r.categoria||'(sem categoria)'; (groups[c]=groups[c]||[]).push(r);});
+  var gk=Object.keys(groups).sort(function(a,b){var ia=ORDER.indexOf(a),ib=ORDER.indexOf(b); ia=ia<0?99:ia; ib=ib<0?99:ib; return ia-ib||a.localeCompare(b);});
+
+  html+='<div class="panel" style="padding-top:6px">';
+  if(!f.length){ html+='<div class="empty">Nenhum instrumento corresponde aos filtros.</div></div>'; return html; }
+  html+='<table><tr><th>Nº</th><th>Partícipe</th><th>Instrumento</th><th>Objeto</th><th>Vig. fim</th><th>Dias</th><th>Situação</th><th>Resp.</th></tr>';
+  gk.forEach(function(c){
+    var arr=groups[c].sort(function(a,b){ var da=days(a.vigenciaFim),db=days(b.vigenciaFim); if(da==null)return 1; if(db==null)return -1; return da-db; });
+    html+='<tr class="grp"><td colspan="8">'+esc(c)+' · '+arr.length+'</td></tr>';
+    arr.forEach(function(r){ var d=days(r.vigenciaFim); var s=sitEf(r);
+      html+='<tr class="row" data-id="'+r.id+'">'
+        +'<td>'+esc(r.numero||'—')+(r._dup?' <span class="badge dup">DUP?</span>':'')+(r.transfereRecurso?' <span class="badge">R$</span>':'')+'</td>'
+        +'<td>'+esc((r.participe||'').slice(0,46))+(r.cnpj?'<div class="tiny muted">'+esc(r.cnpj)+'</div>':'')+'</td>'
+        +'<td>'+esc(instrShort(r.instrumento))+(r.prorrogavelAuto?'<div class="tiny muted">auto-prorrog.</div>':'')+'</td>'
+        +'<td class="tiny">'+esc((r.objeto||'—').slice(0,52))+'</td>'
+        +'<td>'+fmtD(r.vigenciaFim)+'</td>'
+        +'<td>'+(d==null?'<span class="muted">—</span>':(d<0?'<span class="muted">'+d+'</span>':d))+'</td>'
+        +'<td>'+sitPill(s)+(r.tramitacao?' <span class="badge">'+esc(r.tramitacao)+'</span>':'')+'</td>'
+        +'<td>'+esc(r.responsavel||'—')+'</td></tr>';
+    });
+  });
+  html+='</table></div>';
+  return html;
+}
+function sel(id,val,opts){ return '<select id="'+id+'">'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(o[0]===val?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>'; }
+
+/* ============== RENDER: NUMERAÇÕES ============== */
+function renderNumeracoes(){
+  var rs=visiveis(); var yr=String(TODAY.getFullYear());
+  var types=[['CONVENIO','Convênio'],['ACT','Acordo de Cooperação Técnica'],['TCT','Termo de Cooperação Técnica'],['CESSAO_IMOVEL','Cessão de Uso de Imóvel']];
+  var html='<div class="panel"><h2>Controle de numerações '+yr+'</h2>'
+    +'<div class="desc">Sequencial anual por tipo de instrumento, derivado dos números já cadastrados. Sugestão do <b>próximo número</b> com base no maior sequencial encontrado para o ano corrente.</div>'
+    +'<div class="numgrid">';
+  types.forEach(function(t){
+    var nums=rs.filter(function(r){return r.instrumento===t[0] && (r.ano===yr || (r.numero||'').indexOf('/'+yr)>=0);})
+      .map(function(r){ var m=(r.numero||'').match(/(\d+)\s*\/\s*'?20\d{2}|^[^\d]*(\d+)/); var seq=null; var mm=(r.numero||'').match(/(\d+)\s*\/\s*20\d{2}/); if(mm)seq=parseInt(mm[1],10); return seq; })
+      .filter(function(x){return x!=null;});
+    var max=nums.length?Math.max.apply(null,nums):0;
+    var next=('00'+(max+1)).slice(-3)+'/'+yr;
+    html+='<div class="numcard"><h4>'+esc(t[1])+'</h4>'
+      +'<div class="tiny muted">cadastrados em '+yr+': '+nums.length+' · último seq.: '+(max||'—')+'</div>'
+      +'<div class="tiny muted" style="margin:6px 0 2px">Próximo sugerido</div><div class="next">'+next+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div class="alert i"><span>ℹ</span><div>A sugestão considera apenas os instrumentos já lançados nesta base. Confirme contra o controle oficial antes de formalizar — números reservados e não cadastrados aqui não entram no cálculo.</div></div>';
+  html+='</div>';
+  return html;
+}
+
+/* ============== RENDER: SERVIDORES ============== */
+var FSV='';
+function renderServidores(){
+  var html='<div class="alert i"><span>ℹ</span><div><b>Vínculo com cessões.</b> Lista de servidores cedidos (ônus/sem ônus) associada às cooperações de cessão recíproca. Útil para acompanhar a vigência da cessão em paralelo à do instrumento.</div></div>';
+  html+='<div class="toolbar"><input type="search" id="fsv" placeholder="Buscar servidor, órgão, núcleo…" value="'+esc(FSV)+'"><span class="muted tiny">'+SV.length+' registros</span></div>';
+  var f=SV.filter(function(s){ if(!FSV)return true; var q=FSV.toLowerCase(); return [s.servidor,s.orgaoOrigem,s.nucleo].join(' ').toLowerCase().indexOf(q)>=0; });
+  html+='<div class="panel" style="padding-top:6px"><table><tr><th>Servidor</th><th>Órgão de origem</th><th>Núcleo</th><th>Tipo</th><th>Início</th><th>Fim</th><th>Situação</th></tr>';
+  if(!f.length){ html+='</table><div class="empty">Sem registros de servidores cedidos. Sincronize com o OneDrive ou carregue servidores.json.</div></div>'; return html; }
+  f.sort(function(a,b){var da=days(a.dataFim),db=days(b.dataFim); if(da==null)return 1; if(db==null)return -1; return da-db;}).forEach(function(s){
+    var d=days(s.dataFim); var sit=d==null?'—':(d<0?'VENCIDA':(d<=90?'A VENCER':'VIGENTE'));
+    html+='<tr><td>'+esc(s.servidor||'')+'</td><td class="tiny">'+esc(s.orgaoOrigem||'')+'</td><td class="tiny">'+esc(s.nucleo||'')+'</td><td>'+esc(s.tipoCessao||'')+'</td><td>'+fmtD(s.dataInicio)+'</td><td>'+fmtD(s.dataFim)+'</td><td>'+(sit==='VENCIDA'?'<span class="pill danger">VENCIDA</span>':sit==='A VENCER'?'<span class="pill warn">A VENCER</span>':sit==='VIGENTE'?'<span class="pill ok">VIGENTE</span>':'<span class="muted">—</span>')+'</td></tr>';
+  });
+  html+='</table></div>'; return html;
+}
+
+/* ============== MODAL (ficha) ============== */
+var DRAFT=null;
+function openRec(id){
+  var r=id?DB.filter(function(x){return x.id===id;})[0]:null;
+  DRAFT= r?JSON.parse(JSON.stringify(r)):{id:'cv'+Date.now(),instrumento:'CONVENIO',categoria:'',transfereRecurso:false,papelDPE:null,aditivos:[],parcelas:[],servidores:[],_v:0,_new:true};
+  drawModal();
+  document.getElementById('modalBg').classList.add('on');
+}
+function di(k,v){ DRAFT[k]=v; } // draft input sem redraw (preserva foco)
+function drawModal(){
+  var r=DRAFT, isNew=r._new;
+  var m=document.getElementById('modal');
+  var h='<div class="mh"><h3>'+(isNew?'Novo instrumento':esc(instrShort(r.instrumento)+' '+(r.numero||'')))+'</h3><button class="btn ghost sm" id="mClose">Fechar</button></div><div class="mb">';
+
+  h+='<div class="frow3">'
+    +fld('Instrumento', selRaw('m_instrumento',r.instrumento,[['CONVENIO','Convênio'],['ACT','Acordo de Coop. Técnica'],['TCT','Termo de Coop. Técnica'],['CESSAO_IMOVEL','Cessão de Uso de Imóvel']]))
+    +fld('Número', inp('m_numero',r.numero))
+    +fld('Categoria', selRaw('m_categoria',r.categoria||'',[['','—'],['ENSINO','Ensino'],['INSTITUCIONAL','Institucional'],['CESSÃO SERVIDOR','Cessão de servidor'],['COM TRANSFERÊNCIA','Com transferência']]))
+    +'</div>';
+  h+=fld('Partícipe', inp('m_participe',r.participe));
+  h+='<div class="frow">'+fld('CNPJ / CPF', inp('m_cnpj',r.cnpj))+fld('Contato do representante', inp('m_contato',r.contato))+'</div>';
+  h+=fld('Objeto', ta('m_objeto',r.objeto));
+
+  h+='<div class="section-t">Vigência e situação</div>';
+  h+='<div class="frow3">'+fld('Início', inp('m_vi',r.vigenciaInicio,'date'))+fld('Fim', inp('m_vf',r.vigenciaFim,'date'))
+    +fld('Situação (gravada)', selRaw('m_sit',r.situacaoGravada||'',[['','— (calcular)'],['VIGENTE','Vigente'],['A VENCER','A vencer'],['RENEGOCIAR','Renegociar'],['VENCIDO','Vencido'],['CONCLUÍDO','Concluído/Arquivar']]))+'</div>';
+  h+='<div class="frow3">'
+    +fld('Interesse em renovar', inp('m_renovar',r.interesseRenovar))
+    +fld('Prorrogável automaticamente', selRaw('m_auto',r.prorrogavelAuto?'1':'',[['','Não'],['1','Sim']]))
+    +fld('', '<div class="tiny muted" style="padding-top:22px">Situação efetiva: '+sitPill(sitEf(r))+'</div>')+'</div>';
+
+  h+='<div class="section-t">Tramitação e processos</div>';
+  h+='<div class="frow3">'+fld('Responsável (pessoa)', inp('m_resp',r.responsavel))
+    +fld('Tramitação', selRaw('m_tramit',r.tramitacao||'',[['','—'],['SOBRESTADO','Sobrestado'],['EM TRAMITAÇÃO','Em tramitação'],['PENDENTE','Pendente']]))
+    +fld('Nº processo SEI', inp('m_sei',r.sei))+'</div>';
+  h+='<div class="frow">'+fld('Nº processo físico', inp('m_pf',r.processoFisico))+fld('Obs. Portal Transparência', inp('m_obst',r.obsTransparencia))+'</div>';
+  h+=fld('Observações / status', ta('m_obs',r.observacoes));
+
+  // transferência de recursos
+  h+='<div class="section-t">Transferência de recursos</div>';
+  h+='<div class="frow">'+fld('Há transferência?', selRaw('m_tr',r.transfereRecurso?'1':'',[['','Não'],['1','Sim']]))
+    +fld('Papel da DPE', selRaw('m_papel',r.papelDPE||'',[['','—'],['concedente','Concedente (repassa)'],['convenente','Convenente (recebe)']]))+'</div>';
+  if(r.transfereRecurso){
+    h+='<div class="frow">'+fld('Valor concedente', inp('m_vconc',r.valorConcedente,'number'))+fld('Valor contrapartida (convenente)', inp('m_vcontr',r.valorContrapartida,'number'))+'</div>';
+    h+='<div class="tiny muted" style="margin-bottom:6px">Parcelas liberadas</div>';
+    (r.parcelas||[]).forEach(function(p,i){ h+='<div class="subitem"><span class="x" data-delparc="'+i+'">✕</span>Parcela '+esc(p.numero||(i+1))+' · '+fmtD(p.data)+' · '+fmtMoney(p.valor)+'</div>'; });
+    h+='<button class="btn sec sm" id="addParc">+ Parcela</button>';
+  }
+
+  // aditivos
+  h+='<div class="section-t">Aditivos e modificações</div>';
+  (r.aditivos||[]).forEach(function(a,i){ h+='<div class="subitem"><span class="x" data-deladit="'+i+'">✕</span><b>'+esc(a.tipo||'outro')+'</b> '+esc(a.numero||'')+' · '+fmtD(a.data)
+    +(a.novaVigenciaFim?' · nova vigência '+fmtD(a.novaVigenciaFim):'')+(a.valor!=null?' · '+fmtMoney(a.valor):'')
+    +(a.objeto?'<div class="tiny muted">'+esc(a.objeto)+'</div>':'')+'</div>'; });
+  h+='<button class="btn sec sm" id="addAdit">+ Aditivo / modificação</button>';
+
+  h+='</div><div class="mf">';
+  if(!isNew) h+='<button class="btn danger sm" id="mDel">Excluir</button>';
+  h+='<button class="btn sec" id="mCancel">Cancelar</button><button class="btn" id="mSave">Salvar</button></div>';
+  m.innerHTML=h;
+
+  // binds que não redesenham (preservam foco)
+  bindDraft('m_numero','numero'); bindDraft('m_participe','participe'); bindDraft('m_cnpj','cnpj');
+  bindDraft('m_contato','contato'); bindDraft('m_objeto','objeto'); bindDraft('m_vi','vigenciaInicio');
+  bindDraft('m_vf','vigenciaFim'); bindDraft('m_renovar','interesseRenovar'); bindDraft('m_resp','responsavel');
+  bindDraft('m_sei','sei'); bindDraft('m_pf','processoFisico'); bindDraft('m_obst','obsTransparencia'); bindDraft('m_obs','observacoes');
+  bindDraft('m_vconc','valorConcedente',true); bindDraft('m_vcontr','valorContrapartida',true);
+  // selects que redesenham (mudam estrutura)
+  bindSel('m_instrumento','instrumento'); bindSel('m_categoria','categoria'); bindSel('m_sit','situacaoGravada');
+  bindSel('m_tramit','tramitacao'); bindSel('m_papel','papelDPE');
+  bindSel('m_auto','prorrogavelAuto',function(v){return v==='1';});
+  bindSel('m_tr','transfereRecurso',function(v){return v==='1';},true);
+
+  document.getElementById('mClose').onclick=closeModal;
+  document.getElementById('mCancel').onclick=closeModal;
+  document.getElementById('mSave').onclick=saveRec;
+  if(document.getElementById('mDel')) document.getElementById('mDel').onclick=function(){ if(confirm('Excluir este instrumento? A exclusão é registrada e sincronizada.')){ addTomb(DRAFT.id); closeModal(); render(); } };
+  if(document.getElementById('addAdit')) document.getElementById('addAdit').onclick=addAditivo;
+  if(document.getElementById('addParc')) document.getElementById('addParc').onclick=addParcela;
+  Array.prototype.forEach.call(m.querySelectorAll('[data-deladit]'),function(b){b.onclick=function(){DRAFT.aditivos.splice(+b.getAttribute('data-deladit'),1);drawModal();};});
+  Array.prototype.forEach.call(m.querySelectorAll('[data-delparc]'),function(b){b.onclick=function(){DRAFT.parcelas.splice(+b.getAttribute('data-delparc'),1);drawModal();};});
+}
+function fld(l,inner){ return '<div class="fld">'+(l?'<label>'+esc(l)+'</label>':'')+inner+'</div>'; }
+function inp(id,v,type){ return '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(v==null?'':v)+'">'; }
+function ta(id,v){ return '<textarea id="'+id+'">'+esc(v==null?'':v)+'</textarea>'; }
+function selRaw(id,val,opts){ return '<select id="'+id+'">'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(String(o[0])===String(val)?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>'; }
+function bindDraft(id,key,num){ var el=document.getElementById(id); if(!el)return; el.oninput=function(){ var v=el.value; if(num) v=v===''?null:parseFloat(v.replace(',','.')); DRAFT[key]=v; if(id==='m_vf'||id==='m_vi') updateEf(); }; }
+function bindSel(id,key,xform,redraw){ var el=document.getElementById(id); if(!el)return; el.onchange=function(){ var v=el.value; DRAFT[key]=xform?xform(v):(v||null); if(redraw||id==='m_sit') drawModal(); }; }
+function updateEf(){ /* atualização leve da situação efetiva sem redraw total seria possível; mantemos simples */ }
+function addAditivo(){
+  var tipo=prompt('Tipo (prazo / valor / objeto / outro):','prazo'); if(tipo===null)return;
+  var num=prompt('Número do aditivo:','')||'';
+  var data=prompt('Data (AAAA-MM-DD):','')||'';
+  var nv=(/prazo/i.test(tipo))?(prompt('Nova vigência fim (AAAA-MM-DD):','')||''):'';
+  var val=(/valor/i.test(tipo))?prompt('Valor (R$):',''):null;
+  var obj=prompt('Objeto/observação:','')||'';
+  DRAFT.aditivos.push({tipo:tipo.toLowerCase(),numero:num,data:data||null,novaVigenciaFim:nv||null,valor:val?parseFloat(String(val).replace(',','.')):null,objeto:obj||null,alterouVigencia:!!nv});
+  if(nv) DRAFT.vigenciaFim=nv;
+  drawModal();
+}
+function addParcela(){
+  var num=prompt('Nº da parcela:',String((DRAFT.parcelas.length||0)+1))||'';
+  var data=prompt('Data do repasse (AAAA-MM-DD):','')||'';
+  var val=prompt('Valor (R$):','')||'';
+  DRAFT.parcelas.push({numero:num,data:data||null,valor:val?parseFloat(val.replace(',','.')):null});
+  drawModal();
+}
+function saveRec(){
+  var r=DRAFT; if(!r.participe){ alert('Informe o partícipe.'); return; }
+  delete r._new;
+  r._v=(r._v||0)+1; r._ts=new Date().toISOString().slice(0,19); r._by=uid();
+  var idx=-1; for(var i=0;i<DB.length;i++){ if(DB[i].id===r.id){idx=i;break;} }
+  if(idx<0) DB.push(r); else DB[idx]=r;
+  saveArr(KEY,DB); closeModal(); render();
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('on'); DRAFT=null; }
+
+/* ============== SYNC ONEDRIVE (File System Access API) ============== */
+var DIR=null, FH=null;
+function idbGet(k){ return new Promise(function(res){ var rq=indexedDB.open('cfcc_conv',1); rq.onupgradeneeded=function(){rq.result.createObjectStore('h');}; rq.onsuccess=function(){var db=rq.result;try{var t=db.transaction('h','readonly').objectStore('h').get(k);t.onsuccess=function(){res(t.result||null);};t.onerror=function(){res(null);};}catch(e){res(null);}}; rq.onerror=function(){res(null);}; }); }
+function idbSet(k,v){ return new Promise(function(res){ var rq=indexedDB.open('cfcc_conv',1); rq.onupgradeneeded=function(){rq.result.createObjectStore('h');}; rq.onsuccess=function(){var db=rq.result;var t=db.transaction('h','readwrite').objectStore('h').put(v,k);t.onsuccess=function(){res(true);};t.onerror=function(){res(false);};}; rq.onerror=function(){res(false);}; }); }
+
+async function connectDir(){
+  if(!window.showDirectoryPicker){ alert('Sincronização por pasta requer navegador baseado em Chromium (Edge/Chrome). Use Exportar/Importar JSON como alternativa.'); return; }
+  try{ DIR=await window.showDirectoryPicker({mode:'readwrite'}); await idbSet('dir',DIR); await ensureFile(); await pullMerge(); setSync(true); render(); }
+  catch(e){ /* cancelado */ }
+}
+async function ensureFile(){ try{ FH=await DIR.getFileHandle('convenios.json',{create:true}); }catch(e){ FH=null; } }
+async function tryRestore(){
+  if(!window.showDirectoryPicker) return;
+  var d=await idbGet('dir'); if(!d) return;
+  try{ var perm=await d.queryPermission({mode:'readwrite'}); if(perm!=='granted'){ setSync(false,'Reautorizar'); return; } DIR=d; await ensureFile(); await pullMerge(); setSync(true); render(); }catch(e){}
+}
+async function pullMerge(){
+  if(!FH) return;
+  try{ var f=await FH.getFile(); var txt=await f.text(); if(!txt.trim()){ await pushAll(); return; }
+    var remote=JSON.parse(txt); mergeIn(remote); saveArr(KEY,DB);
+  }catch(e){ console.warn('pull',e); }
+}
+function mergeIn(remote){
+  var t=tombs(); var byId={}; DB.forEach(function(r){byId[r.id]=r;});
+  remote.forEach(function(rr){ if(t.indexOf(rr.id)>=0) return; var cur=byId[rr.id];
+    if(!cur){ DB.push(rr); byId[rr.id]=rr; } else if((rr._v||0)>(cur._v||0)){ for(var k in rr) cur[k]=rr[k]; } });
+}
+async function pushAll(){
+  if(!FH){ return; }
+  try{ var w=await FH.createWritable(); var out=DB.filter(function(r){return tombs().indexOf(r.id)<0;}); await w.write(JSON.stringify(out,null,1)); await w.close(); }
+  catch(e){ console.warn('push',e); }
+}
+function setSync(on,label){ var d=document.getElementById('syncDot'),t=document.getElementById('syncTxt'),b=document.getElementById('btnSync');
+  if(on){ d.classList.add('on'); t.textContent='OneDrive ✓'; b.textContent='Sincronizar agora'; }
+  else { d.classList.remove('on'); t.textContent=label||'Local'; b.textContent=label||'Conectar OneDrive'; } }
+
+/* ============== EXPORT / IMPORT ============== */
+function exportJSON(){
+  var out=DB.filter(function(r){return tombs().indexOf(r.id)<0;});
+  var blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='convenios.json'; a.click();
+}
+function importJSON(){
+  var inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+  inp.onchange=function(){ var f=inp.files[0]; if(!f)return; var rd=new FileReader();
+    rd.onload=function(){ try{ var arr=JSON.parse(rd.result); if(!Array.isArray(arr)) throw 0; mergeIn(arr); saveArr(KEY,DB); render(); alert('Importados/mesclados '+arr.length+' registros.'); }catch(e){ alert('Arquivo inválido.'); } };
+    rd.readAsText(f); };
+  inp.click();
+}
+
+/* ============== ROUTER ============== */
+function render(){
+  var v=document.getElementById('view');
+  if(VIEW==='painel') v.innerHTML=renderPainel();
+  else if(VIEW==='lista') v.innerHTML=renderLista();
+  else if(VIEW==='numeracoes') v.innerHTML=renderNumeracoes();
+  else if(VIEW==='servidores') v.innerHTML=renderServidores();
+  bindView();
+  document.getElementById('foot').innerHTML='CFCC · DPE/RN — Coordenadoria de Fiscalização de Contratos e Convênios. Elaboração técnica: Rony Salles, Coordenador (matrícula 215.115-4). '
+    +'fiscalizacao@dpern.def.br · (84) 98101-5804. © '+TODAY.getFullYear()+' · v1 · uso interno de gestão/capacitação; citação exigida, vedadas alteração e utilização comercial (Lei 9.610/98). '
+    +'<button class="btn sec sm" id="btnImp" style="margin-top:8px">Importar JSON</button>';
+  var bi=document.getElementById('btnImp'); if(bi) bi.onclick=importJSON;
+}
+function bindView(){
+  Array.prototype.forEach.call(document.querySelectorAll('tr.row[data-id]'),function(tr){ tr.onclick=function(){ openRec(tr.getAttribute('data-id')); }; });
+  var fq=document.getElementById('fq'); if(fq) fq.oninput=function(){FILT.q=fq.value; var v=document.getElementById('view'); v.innerHTML=renderLista(); bindView(); fq2focus();};
+  function fq2focus(){ var e=document.getElementById('fq'); if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);} }
+  ['finstr|instr','fcat|cat','fsit|sit','fresp|resp'].forEach(function(p){ var a=p.split('|'); var el=document.getElementById(a[0]); if(el) el.onchange=function(){FILT[a[1]]=el.value;render();}; });
+  var bn=document.getElementById('btnNew'); if(bn) bn.onclick=function(){openRec(null);};
+  var be=document.getElementById('btnExp'); if(be) be.onclick=exportJSON;
+  var fsv=document.getElementById('fsv'); if(fsv) fsv.oninput=function(){FSV=fsv.value; var v=document.getElementById('view'); v.innerHTML=renderServidores(); bindView(); var e=document.getElementById('fsv'); if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);} };
+}
+document.getElementById('tabs').onclick=function(e){ var b=e.target.closest('button'); if(!b)return; VIEW=b.getAttribute('data-v');
+  Array.prototype.forEach.call(this.children,function(c){c.classList.toggle('on',c===b);}); render(); };
+document.getElementById('btnSync').onclick=function(){ if(DIR){ pushAll().then(function(){return pullMerge();}).then(function(){render();}); } else connectDir(); };
+
+/* boot */
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(function(){}); }
+render();
+tryRestore();
+</script>
+</body>
+</html>
