@@ -342,7 +342,7 @@ function renderLista(){
         +'<td>'+esc(instrShort(r.instrumento))+(r.prorrogavelAuto?'<div class="tiny muted">auto-prorrog.</div>':'')+'</td>'
         +'<td class="tiny">'+esc((r.objeto||'—').slice(0,52))+'</td>'
         +'<td>'+fmtD(r.vigenciaFim)+'</td>'
-        +'<td>'+(d==null?'<span class="muted">—</span>':(d<0?'<span class="muted">'+d+'</span>':d))+'</td>'
+        +'<td>'+((s==='FINALIZADO'||d==null)?'<span class="muted">—</span>':(d<0?'<span class="muted">'+d+'</span>':d))+'</td>'
         +'<td>'+sitPill(s)+(r.tramitacao?' <span class="badge">'+esc(r.tramitacao)+'</span>':'')+'</td>'
         +'<td>'+esc(r.responsavel||'—')+'</td></tr>';
     });
