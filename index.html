@@ -170,37 +170,45 @@ function normOrg(s){ if(!s) return '';
   s=s.replace(/\bRN\b/g,'').replace(/\s+/g,' ').trim(); return s;
 }
 function isCessao(r){ return r.categoria==='CESSÃO SERVIDOR' || (/cess/i.test(r.objeto||'') && /servidor/i.test(r.objeto||'')); }
-/* Constrói índices: servidorId->instrumento e instrumentoId->[servidores] */
+/* Constrói índices: servidorId->instrumento e instrumentoId->[servidores].
+   Vínculo manual (s.instrumentoId) sobrepõe o automático por órgão.
+   '__none__' = sem vínculo explícito. */
 function buildLinks(){
   var rs=visiveis(), cess=rs.filter(isCessao);
+  var byId={}; rs.forEach(function(r){byId[r.id]=r;});
   var idx={}; cess.forEach(function(r){ var k=normOrg(r.participe); if(k)(idx[k]=idx[k]||[]).push(r); });
-  var svToInstr={}, instrToSv={};
-  SV.forEach(function(s){ var k=normOrg(s.orgaoOrigem);
-    var hit=idx[k];
-    if(!hit){ // fallback por inclusão
-      for(var kk in idx){ if(k && (k.indexOf(kk)>=0 || kk.indexOf(k)>=0)){ hit=idx[kk]; break; } }
+  var svToInstr={}, instrToSv={}, manual={};
+  SV.forEach(function(s){
+    var inst=null;
+    if(s.instrumentoId==='__none__'){ inst=null; manual[s.id]=true; }
+    else if(s.instrumentoId && byId[s.instrumentoId]){ inst=byId[s.instrumentoId]; manual[s.id]=true; }
+    else {
+      var k=normOrg(s.orgaoOrigem); var hit=idx[k];
+      if(!hit){ for(var kk in idx){ if(k && (k.indexOf(kk)>=0 || kk.indexOf(k)>=0)){ hit=idx[kk]; break; } } }
+      if(hit && hit.length) inst=hit[0];
     }
-    if(hit && hit.length){ var inst=hit[0]; svToInstr[s.id]=inst; (instrToSv[inst.id]=instrToSv[inst.id]||[]).push(s); }
+    if(inst){ svToInstr[s.id]=inst; (instrToSv[inst.id]=instrToSv[inst.id]||[]).push(s); }
   });
-  return {svToInstr:svToInstr, instrToSv:instrToSv};
+  return {svToInstr:svToInstr, instrToSv:instrToSv, manual:manual};
 }
+function cessaoInstrs(){ return visiveis().filter(isCessao).sort(function(a,b){ return (a.participe||'').localeCompare(b.participe||''); }); }
 
 /* Situação efetiva (calculada; não sobrescreve a gravada) */
 function sitEf(r){
   var g=(r.situacaoGravada||'').toUpperCase();
-  if(/ARQUIV|CONCLU|FINALIZ/.test(g)) return 'CONCLUÍDO';
+  if(/ARQUIV|CONCLU|FINALIZ/.test(g)) return 'FINALIZADO';
   if(!r.vigenciaInicio && !r.vigenciaFim) return 'PENDENTE';
-  var d=days(r.vigenciaFim);
-  if(d!=null && d<0) return 'VENCIDO';
-  if(g==='VENCIDO' && d==null) return 'VENCIDO';
   if(g==='RENEGOCIAR') return 'RENEGOCIAR';
+  var d=days(r.vigenciaFim);
+  if(d!=null && d<0) return 'FINALIZADO';
+  if(g==='VENCIDO' && d==null) return 'FINALIZADO';
   if(!r.vigenciaFim) return 'VIGENTE';
   if(d!=null && d<=90) return 'A VENCER';
   return 'VIGENTE';
 }
-function ativo(r){ var s=sitEf(r); return s!=='VENCIDO' && s!=='CONCLUÍDO'; }
+function ativo(r){ return sitEf(r)!=='FINALIZADO'; }
 function sitPill(s){
-  var m={'VIGENTE':'ok','A VENCER':'warn','RENEGOCIAR':'warn','VENCIDO':'danger','CONCLUÍDO':'neu','PENDENTE':'info'};
+  var m={'VIGENTE':'ok','A VENCER':'warn','RENEGOCIAR':'warn','FINALIZADO':'neu','PENDENTE':'info'};
   return '<span class="pill '+(m[s]||'neu')+'">'+esc(s)+'</span>';
 }
 function visiveis(){ var t=tombs(); return DB.filter(function(r){return t.indexOf(r.id)<0;}); }
@@ -208,10 +216,10 @@ function visiveis(){ var t=tombs(); return DB.filter(function(r){return t.indexO
 /* ============== RENDER: PAINEL ============== */
 function renderPainel(){
   var rs=visiveis();
-  var c={vig:0,avenc:0,venc:0,reneg:0,pend:0,conc:0};
+  var c={vig:0,avenc:0,fin:0,reneg:0,pend:0};
   rs.forEach(function(r){var s=sitEf(r);
-    if(s==='VIGENTE')c.vig++; else if(s==='A VENCER')c.avenc++; else if(s==='VENCIDO')c.venc++;
-    else if(s==='RENEGOCIAR')c.reneg++; else if(s==='PENDENTE')c.pend++; else if(s==='CONCLUÍDO')c.conc++; });
+    if(s==='VIGENTE')c.vig++; else if(s==='A VENCER')c.avenc++; else if(s==='FINALIZADO')c.fin++;
+    else if(s==='RENEGOCIAR')c.reneg++; else if(s==='PENDENTE')c.pend++; });
   var ativos=rs.filter(ativo);
 
   // por instrumento / categoria (apenas ativos)
@@ -219,9 +227,9 @@ function renderPainel(){
   ativos.forEach(function(r){ byInstr[r.instrumento]=(byInstr[r.instrumento]||0)+1; byCat[r.categoria||'—']=(byCat[r.categoria||'—']||0)+1; });
 
   // faixas de vencimento (ativos com data)
-  var fa={venc:0,d30:0,d60:0,d90:0,d180:0,mais:0,semd:0};
+  var fa={d30:0,d60:0,d90:0,d180:0,mais:0,semd:0};
   ativos.forEach(function(r){ var d=days(r.vigenciaFim);
-    if(d==null){fa.semd++;return;} if(d<0)fa.venc++; else if(d<=30)fa.d30++; else if(d<=60)fa.d60++; else if(d<=90)fa.d90++; else if(d<=180)fa.d180++; else fa.mais++; });
+    if(d==null){fa.semd++;return;} if(d<=30)fa.d30++; else if(d<=60)fa.d60++; else if(d<=90)fa.d90++; else if(d<=180)fa.d180++; else fa.mais++; });
 
   // financeiro (com transferência)
   var ft=rs.filter(function(r){return r.transfereRecurso;});
@@ -233,9 +241,9 @@ function renderPainel(){
     +kpi('verde','Vigentes',c.vig,'situação efetiva')
     +kpi('warn','A vencer (≤90d)',c.avenc,'exigem ação')
     +kpi('warn','Renegociar',c.reneg,'sinalizados')
-    +kpi('danger','Vencidos',c.venc,'fora dos ativos')
+    +kpi('neu','Finalizados',c.fin,'vigência expirada')
     +kpi('info','Pendentes',c.pend,'sem vigência definida')
-    +kpi('neu','Total na base',rs.length,(c.conc?c.conc+' concluídos':'instrumentos'))
+    +kpi('azul','Total na base',rs.length,'instrumentos')
     +'</div>';
 
   if(c.pend>0 || rs.some(function(r){return r._dup;})){
@@ -252,7 +260,7 @@ function renderPainel(){
   html+='</div>';
 
   html+='<div class="panel"><h2>Faixas de vencimento</h2><div class="desc">Instrumentos ativos por proximidade do término da vigência.</div>'
-    +bars({'Vencidos':fa.venc,'≤ 30 dias':fa.d30,'31–60':fa.d60,'61–90':fa.d90,'91–180':fa.d180,'> 180':fa.mais,'Sem data':fa.semd}, ativos.length, null, true)+'</div>';
+    +bars({'≤ 30 dias':fa.d30,'31–60':fa.d60,'61–90':fa.d90,'91–180':fa.d180,'> 180':fa.mais,'Sem data':fa.semd}, ativos.length, null, true)+'</div>';
 
   html+='<div class="panel"><h2>Convênios com transferência de recursos</h2>'
     +'<div class="desc">A DPE pode atuar como <b>concedente</b> (repassa) ou <b>convenente</b> (recebe). Valores e parcelas controlados por instrumento — não somáveis aos demais.</div>'
@@ -302,7 +310,7 @@ function renderLista(){
     +'<input type="search" id="fq" placeholder="Buscar partícipe, objeto, nº, CNPJ, SEI…" value="'+esc(FILT.q)+'">'
     +sel('finstr',FILT.instr,[['','Todos instrumentos'],['CONVENIO','Convênio'],['ACT','ACT'],['TCT','TCT'],['CESSAO_IMOVEL','Cessão imóvel']])
     +sel('fcat',FILT.cat,[['','Todas categorias']].concat(Object.keys(cats).sort().map(function(c){return [c,c];})))
-    +sel('fsit',FILT.sit,[['','Todas situações'],['VIGENTE','Vigente'],['A VENCER','A vencer'],['RENEGOCIAR','Renegociar'],['VENCIDO','Vencido'],['PENDENTE','Pendente'],['CONCLUÍDO','Concluído']])
+    +sel('fsit',FILT.sit,[['','Todas situações'],['VIGENTE','Vigente'],['A VENCER','A vencer'],['RENEGOCIAR','Renegociar'],['FINALIZADO','Finalizado'],['PENDENTE','Pendente']])
     +sel('fresp',FILT.resp,[['','Todos responsáveis']].concat(Object.keys(resps).sort().map(function(c){return [c,c];})))
     +'<button class="btn sm" id="btnNew">+ Novo</button>'
     +'<button class="btn sec sm" id="btnExp">Exportar JSON</button>'
@@ -376,6 +384,7 @@ function renderServidores(){
     +'Casados: <b>'+nMatch+'</b> · sem vínculo: <b>'+nUn+'</b> (divergência de grafia na fonte — corrigir nome do partícipe ou do órgão).</div></div>';
   html+='<div class="toolbar"><input type="search" id="fsv" placeholder="Buscar servidor, órgão, núcleo, instrumento…" value="'+esc(FSV)+'">'
     +'<label class="tiny muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="fsvun"'+(FSV_UNMATCHED?' checked':'')+'> só sem vínculo</label>'
+    +'<button class="btn sm" id="btnNewSv">+ Novo servidor</button>'
     +'<span class="muted tiny" style="margin-left:auto">'+SV.length+' registros</span></div>';
   var f=SV.filter(function(s){
     if(FSV_UNMATCHED && L.svToInstr[s.id]) return false;
@@ -389,13 +398,71 @@ function renderServidores(){
     var d=days(s.dataFim); var sit=d==null?'—':(d<0?'VENCIDA':(d<=90?'A VENCER':'VIGENTE'));
     var inst=L.svToInstr[s.id];
     var instCell = inst
-      ? '<a href="#" data-openinst="'+inst.id+'">'+esc(inst.numero||'s/nº')+'</a> <span class="badge">'+esc(instShort(inst.instrumento))+'</span><div class="tiny muted">vig. '+fmtD(inst.vigenciaFim)+'</div>'
-      : '<span class="pill danger">sem vínculo</span>';
-    html+='<tr><td>'+esc(s.servidor||'')+'</td><td class="tiny">'+esc(s.orgaoOrigem||'')+'</td><td>'+instCell+'</td><td class="tiny">'+esc(s.nucleo||'')+'</td><td>'+esc(s.tipoCessao||'')+'</td><td>'+fmtD(s.dataFim)+'</td><td>'+(sit==='VENCIDA'?'<span class="pill danger">VENCIDA</span>':sit==='A VENCER'?'<span class="pill warn">A VENCER</span>':sit==='VIGENTE'?'<span class="pill ok">VIGENTE</span>':'<span class="muted">—</span>')+'</td></tr>';
+      ? '<a href="#" data-openinst="'+inst.id+'">'+esc(inst.numero||'s/nº')+'</a> <span class="badge">'+esc(instShort(inst.instrumento))+'</span>'+(L.manual[s.id]?' <span class="badge" style="background:#e1eff5;color:#0c5b7a">manual</span>':'')+'<div class="tiny muted">vig. '+fmtD(inst.vigenciaFim)+'</div>'
+      : '<span class="pill danger">sem vínculo</span>'+(L.manual[s.id]?' <span class="badge" style="background:#e1eff5;color:#0c5b7a">manual</span>':'');
+    html+='<tr class="row" data-opensv="'+s.id+'"><td>'+esc(s.servidor||'')+'</td><td class="tiny">'+esc(s.orgaoOrigem||'')+'</td><td>'+instCell+'</td><td class="tiny">'+esc(s.nucleo||'')+'</td><td>'+esc(s.tipoCessao||'')+'</td><td>'+fmtD(s.dataFim)+'</td><td>'+(sit==='VENCIDA'?'<span class="pill danger">VENCIDA</span>':sit==='A VENCER'?'<span class="pill warn">A VENCER</span>':sit==='VIGENTE'?'<span class="pill ok">VIGENTE</span>':'<span class="muted">—</span>')+'</td></tr>';
   });
   html+='</table></div>'; return html;
 }
 function instShort(t){ return instrShort(t); }
+
+/* ====== MODAL: servidor (vigência + vínculo editáveis) ====== */
+var SVDRAFT=null;
+function openServ(id){
+  var s=id?SV.filter(function(x){return x.id===id;})[0]:null;
+  SVDRAFT = s?JSON.parse(JSON.stringify(s)):{id:'sv'+Date.now(),servidor:'',orgaoOrigem:'',nucleo:'',tipoCessao:'SEM ÔNUS',dataInicio:null,dataFim:null,email:'',contato:'',responsavel:'',instrumentoId:null,_new:true};
+  drawSvModal();
+  document.getElementById('modalBg').classList.add('on');
+}
+function drawSvModal(){
+  var s=SVDRAFT, isNew=s._new, m=document.getElementById('modal');
+  var autoInst=null;
+  var cess=cessaoInstrs();
+  // vínculo automático calculado ignorando override:
+  var tmp=Object.assign({},s); tmp.instrumentoId=null;
+  var prevSV=SV; SV=[tmp]; var al=buildLinks().svToInstr[tmp.id]; SV=prevSV;
+  autoInst=al;
+  var autoLbl = autoInst ? ('(automático → '+esc(autoInst.numero||'s/nº')+' '+esc(autoInst.participe||'')+')') : '(automático → nenhum casamento por órgão)';
+
+  var opts=[['','— '+autoLbl],['__none__','Sem vínculo (forçar)']]
+    .concat(cess.map(function(r){ return [r.id, (r.numero||'s/nº')+' — '+(r.participe||'')+' ['+instrShort(r.instrumento)+']']; }));
+
+  var h='<div class="mh"><h3>'+(isNew?'Novo servidor cedido':esc(s.servidor||'Servidor'))+'</h3><button class="btn ghost sm" id="svClose">Fechar</button></div><div class="mb">';
+  h+=fld('Servidor', inp('sv_nome',s.servidor));
+  h+='<div class="frow">'+fld('Órgão de origem', inp('sv_org',s.orgaoOrigem))+fld('Núcleo / lotação', inp('sv_nuc',s.nucleo))+'</div>';
+  h+='<div class="frow3">'+fld('Tipo de cessão', selRaw('sv_tipo',s.tipoCessao||'',[['SEM ÔNUS','Sem ônus'],['COM ÔNUS','Com ônus'],['','—']]))
+    +fld('Início da cessão', inp('sv_di',s.dataInicio,'date'))+fld('Fim da cessão', inp('sv_df',s.dataFim,'date'))+'</div>';
+
+  h+='<div class="section-t">Vínculo com instrumento</div>';
+  h+=fld('Instrumento de cessão', selRaw('sv_inst', s.instrumentoId||'', opts));
+  h+='<div class="tiny muted">Deixe em "automático" para casar por órgão de origem. Escolha um instrumento para fixar o vínculo manualmente (sobrepõe o automático) ou "Sem vínculo" para desvincular.</div>';
+
+  h+='<div class="section-t">Contato</div>';
+  h+='<div class="frow3">'+fld('E-mail', inp('sv_mail',s.email))+fld('Telefone', inp('sv_cont',s.contato))+fld('Responsável', inp('sv_resp',s.responsavel))+'</div>';
+
+  h+='</div><div class="mf">';
+  if(!isNew) h+='<button class="btn danger sm" id="svDel">Excluir</button>';
+  h+='<button class="btn sec" id="svCancel">Cancelar</button><button class="btn" id="svSave">Salvar</button></div>';
+  m.innerHTML=h;
+
+  bindSv('sv_nome','servidor'); bindSv('sv_org','orgaoOrigem'); bindSv('sv_nuc','nucleo');
+  bindSv('sv_di','dataInicio'); bindSv('sv_df','dataFim'); bindSv('sv_mail','email');
+  bindSv('sv_cont','contato'); bindSv('sv_resp','responsavel');
+  document.getElementById('sv_tipo').onchange=function(){ SVDRAFT.tipoCessao=this.value; };
+  document.getElementById('sv_inst').onchange=function(){ SVDRAFT.instrumentoId=this.value||null; };
+  document.getElementById('svClose').onclick=closeModal;
+  document.getElementById('svCancel').onclick=closeModal;
+  document.getElementById('svSave').onclick=saveServ;
+  if(document.getElementById('svDel')) document.getElementById('svDel').onclick=function(){ if(confirm('Excluir este servidor?')){ SV=SV.filter(function(x){return x.id!==SVDRAFT.id;}); saveArr(KSV,SV); closeModal(); render(); pushSv(); } };
+}
+function bindSv(id,key){ var el=document.getElementById(id); if(!el)return; el.oninput=function(){ SVDRAFT[key]=el.value||(el.type==='date'?null:''); }; }
+function saveServ(){
+  var s=SVDRAFT; if(!s.servidor){ alert('Informe o nome do servidor.'); return; }
+  delete s._new; var i=-1; for(var j=0;j<SV.length;j++){ if(SV[j].id===s.id){i=j;break;} }
+  if(i<0) SV.push(s); else SV[i]=s;
+  saveArr(KSV,SV); closeModal(); render(); pushSv();
+}
+function pushSv(){ if(typeof FHSV!=='undefined' && FHSV){ (async function(){ try{ var w=await FHSV.createWritable(); await w.write(JSON.stringify(SV,null,1)); await w.close(); }catch(e){} })(); } }
 
 /* ============== MODAL (ficha) ============== */
 var DRAFT=null;
@@ -422,7 +489,7 @@ function drawModal(){
 
   h+='<div class="section-t">Vigência e situação</div>';
   h+='<div class="frow3">'+fld('Início', inp('m_vi',r.vigenciaInicio,'date'))+fld('Fim', inp('m_vf',r.vigenciaFim,'date'))
-    +fld('Situação (gravada)', selRaw('m_sit',r.situacaoGravada||'',[['','— (calcular)'],['VIGENTE','Vigente'],['A VENCER','A vencer'],['RENEGOCIAR','Renegociar'],['VENCIDO','Vencido'],['CONCLUÍDO','Concluído/Arquivar']]))+'</div>';
+    +fld('Situação (gravada)', selRaw('m_sit',r.situacaoGravada||'',[['','— (calcular)'],['VIGENTE','Vigente'],['A VENCER','A vencer'],['RENEGOCIAR','Renegociar'],['FINALIZADO','Finalizar/Arquivar']]))+'</div>';
   h+='<div class="frow3">'
     +fld('Interesse em renovar', inp('m_renovar',r.interesseRenovar))
     +fld('Prorrogável automaticamente', selRaw('m_auto',r.prorrogavelAuto?'1':'',[['','Não'],['1','Sim']]))
@@ -609,7 +676,9 @@ function bindView(){
   var be=document.getElementById('btnExp'); if(be) be.onclick=exportJSON;
   var fsv=document.getElementById('fsv'); if(fsv) fsv.oninput=function(){FSV=fsv.value; var v=document.getElementById('view'); v.innerHTML=renderServidores(); bindView(); var e=document.getElementById('fsv'); if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);} };
   var fsvun=document.getElementById('fsvun'); if(fsvun) fsvun.onchange=function(){ FSV_UNMATCHED=fsvun.checked; var v=document.getElementById('view'); v.innerHTML=renderServidores(); bindView(); };
-  Array.prototype.forEach.call(document.querySelectorAll('[data-openinst]'),function(a){ a.onclick=function(e){ e.preventDefault(); openRec(a.getAttribute('data-openinst')); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-openinst]'),function(a){ a.onclick=function(e){ e.preventDefault(); e.stopPropagation(); openRec(a.getAttribute('data-openinst')); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('tr[data-opensv]'),function(tr){ tr.onclick=function(){ openServ(tr.getAttribute('data-opensv')); }; });
+  var bns=document.getElementById('btnNewSv'); if(bns) bns.onclick=function(){ openServ(null); };
 }
 document.getElementById('tabs').onclick=function(e){ var b=e.target.closest('button'); if(!b)return; VIEW=b.getAttribute('data-v');
   Array.prototype.forEach.call(this.children,function(c){c.classList.toggle('on',c===b);}); render(); };

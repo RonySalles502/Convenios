@@ -16,6 +16,12 @@ técnica (ACT), termos de cooperação técnica (TCT) e cessões de uso de imóv
   o handle é guardado em IndexedDB; merge otimista por campo `_v` (último a salvar vence).
   Requer navegador Chromium (Edge/Chrome). Fora dele, use **Exportar/Importar JSON**.
 
+## Vínculo servidor ↔ instrumento (editável)
+- Vínculo automático por órgão de origem × partícipe. Na ficha do servidor é possível
+  **fixar manualmente** o instrumento (sobrepõe o automático) ou forçar "sem vínculo",
+  além de editar a vigência da cessão. O selo `manual` identifica vínculos sobrepostos.
+- Edições de servidores são gravadas em `servidores.json` na pasta sincronizada.
+
 ## Hospedagem
 - GitHub Pages (só este diretório). Caminhos relativos (`./`) funcionam em raiz ou subpasta.
 - `file://` não serve (bloqueia SW e File System Access) — usar `http://localhost` ou Pages.
