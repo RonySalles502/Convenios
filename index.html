@@ -333,7 +333,13 @@ function renderLista(){
   if(!f.length){ html+='<div class="empty">Nenhum instrumento corresponde aos filtros.</div></div>'; return html; }
   html+='<table><tr><th>Nº</th><th>Partícipe</th><th>Instrumento</th><th>Objeto</th><th>Vig. fim</th><th>Dias</th><th>Situação</th><th>Resp.</th></tr>';
   gk.forEach(function(c){
-    var arr=groups[c].sort(function(a,b){ var da=days(a.vigenciaFim),db=days(b.vigenciaFim); if(da==null)return 1; if(db==null)return -1; return da-db; });
+    var arr=groups[c].sort(function(a,b){
+      var fa=sitEf(a)==='FINALIZADO'?1:0, fb=sitEf(b)==='FINALIZADO'?1:0;
+      if(fa!==fb) return fa-fb;                       // finalizados por último
+      var da=days(a.vigenciaFim),db=days(b.vigenciaFim);
+      if(fa===1){ if(da==null)return 1; if(db==null)return -1; return db-da; } // finalizados: mais recentes primeiro
+      if(da==null)return 1; if(db==null)return -1; return da-db;               // ativos: vencendo antes primeiro
+    });
     html+='<tr class="grp"><td colspan="8">'+esc(c)+' · '+arr.length+'</td></tr>';
     arr.forEach(function(r){ var d=days(r.vigenciaFim); var s=sitEf(r);
       html+='<tr class="row" data-id="'+r.id+'">'
