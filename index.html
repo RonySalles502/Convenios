@@ -162,6 +162,29 @@ function days(iso){ if(!iso) return null; var d=new Date(String(iso).slice(0,10)
 function instrLabel(t){ return {CONVENIO:'Convênio',ACT:'Acordo de Cooperação Técnica',TCT:'Termo de Cooperação Técnica',CESSAO_IMOVEL:'Cessão de Uso de Imóvel'}[t]||t; }
 function instrShort(t){ return {CONVENIO:'Convênio',ACT:'ACT',TCT:'TCT',CESSAO_IMOVEL:'Cessão imóvel'}[t]||t; }
 
+/* Normalização para casar órgão de origem (servidor) com partícipe (instrumento de cessão) */
+function normOrg(s){ if(!s) return '';
+  s=s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  s=s.replace(/[\/\.\-,]/g,' ');
+  s=s.replace(/\b(PREFEITURA|MUNICIPAL|PREFETURA|MUNIC|CAMARA|MUN)\b/g,'');
+  s=s.replace(/\bRN\b/g,'').replace(/\s+/g,' ').trim(); return s;
+}
+function isCessao(r){ return r.categoria==='CESSÃO SERVIDOR' || (/cess/i.test(r.objeto||'') && /servidor/i.test(r.objeto||'')); }
+/* Constrói índices: servidorId->instrumento e instrumentoId->[servidores] */
+function buildLinks(){
+  var rs=visiveis(), cess=rs.filter(isCessao);
+  var idx={}; cess.forEach(function(r){ var k=normOrg(r.participe); if(k)(idx[k]=idx[k]||[]).push(r); });
+  var svToInstr={}, instrToSv={};
+  SV.forEach(function(s){ var k=normOrg(s.orgaoOrigem);
+    var hit=idx[k];
+    if(!hit){ // fallback por inclusão
+      for(var kk in idx){ if(k && (k.indexOf(kk)>=0 || kk.indexOf(k)>=0)){ hit=idx[kk]; break; } }
+    }
+    if(hit && hit.length){ var inst=hit[0]; svToInstr[s.id]=inst; (instrToSv[inst.id]=instrToSv[inst.id]||[]).push(s); }
+  });
+  return {svToInstr:svToInstr, instrToSv:instrToSv};
+}
+
 /* Situação efetiva (calculada; não sobrescreve a gravada) */
 function sitEf(r){
   var g=(r.situacaoGravada||'').toUpperCase();
@@ -345,19 +368,34 @@ function renderNumeracoes(){
 }
 
 /* ============== RENDER: SERVIDORES ============== */
-var FSV='';
+var FSV='', FSV_UNMATCHED=false;
 function renderServidores(){
-  var html='<div class="alert i"><span>ℹ</span><div><b>Vínculo com cessões.</b> Lista de servidores cedidos (ônus/sem ônus) associada às cooperações de cessão recíproca. Útil para acompanhar a vigência da cessão em paralelo à do instrumento.</div></div>';
-  html+='<div class="toolbar"><input type="search" id="fsv" placeholder="Buscar servidor, órgão, núcleo…" value="'+esc(FSV)+'"><span class="muted tiny">'+SV.length+' registros</span></div>';
-  var f=SV.filter(function(s){ if(!FSV)return true; var q=FSV.toLowerCase(); return [s.servidor,s.orgaoOrigem,s.nucleo].join(' ').toLowerCase().indexOf(q)>=0; });
-  html+='<div class="panel" style="padding-top:6px"><table><tr><th>Servidor</th><th>Órgão de origem</th><th>Núcleo</th><th>Tipo</th><th>Início</th><th>Fim</th><th>Situação</th></tr>';
-  if(!f.length){ html+='</table><div class="empty">Sem registros de servidores cedidos. Sincronize com o OneDrive ou carregue servidores.json.</div></div>'; return html; }
+  var L=buildLinks();
+  var nMatch=Object.keys(L.svToInstr).length, nUn=SV.length-nMatch;
+  var html='<div class="alert i"><span>ℹ</span><div><b>Vínculo automático.</b> Cada servidor é associado ao instrumento de cessão cujo <b>partícipe</b> casa com o <b>órgão de origem</b> (comparação normalizada: sem acento, sem "Prefeitura/Municipal"). '
+    +'Casados: <b>'+nMatch+'</b> · sem vínculo: <b>'+nUn+'</b> (divergência de grafia na fonte — corrigir nome do partícipe ou do órgão).</div></div>';
+  html+='<div class="toolbar"><input type="search" id="fsv" placeholder="Buscar servidor, órgão, núcleo, instrumento…" value="'+esc(FSV)+'">'
+    +'<label class="tiny muted" style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="fsvun"'+(FSV_UNMATCHED?' checked':'')+'> só sem vínculo</label>'
+    +'<span class="muted tiny" style="margin-left:auto">'+SV.length+' registros</span></div>';
+  var f=SV.filter(function(s){
+    if(FSV_UNMATCHED && L.svToInstr[s.id]) return false;
+    if(!FSV) return true; var q=FSV.toLowerCase();
+    var inst=L.svToInstr[s.id]; var instTxt=inst?(inst.numero+' '+inst.participe):'';
+    return [s.servidor,s.orgaoOrigem,s.nucleo,instTxt].join(' ').toLowerCase().indexOf(q)>=0;
+  });
+  html+='<div class="panel" style="padding-top:6px"><table><tr><th>Servidor</th><th>Órgão de origem</th><th>Instrumento vinculado</th><th>Núcleo</th><th>Tipo</th><th>Cessão até</th><th>Situação</th></tr>';
+  if(!f.length){ html+='</table><div class="empty">'+(SV.length?'Nenhum servidor corresponde ao filtro.':'Sem registros. Conecte o OneDrive (lê convenios.json e servidores.json) ou use Importar JSON.')+'</div></div>'; return html; }
   f.sort(function(a,b){var da=days(a.dataFim),db=days(b.dataFim); if(da==null)return 1; if(db==null)return -1; return da-db;}).forEach(function(s){
     var d=days(s.dataFim); var sit=d==null?'—':(d<0?'VENCIDA':(d<=90?'A VENCER':'VIGENTE'));
-    html+='<tr><td>'+esc(s.servidor||'')+'</td><td class="tiny">'+esc(s.orgaoOrigem||'')+'</td><td class="tiny">'+esc(s.nucleo||'')+'</td><td>'+esc(s.tipoCessao||'')+'</td><td>'+fmtD(s.dataInicio)+'</td><td>'+fmtD(s.dataFim)+'</td><td>'+(sit==='VENCIDA'?'<span class="pill danger">VENCIDA</span>':sit==='A VENCER'?'<span class="pill warn">A VENCER</span>':sit==='VIGENTE'?'<span class="pill ok">VIGENTE</span>':'<span class="muted">—</span>')+'</td></tr>';
+    var inst=L.svToInstr[s.id];
+    var instCell = inst
+      ? '<a href="#" data-openinst="'+inst.id+'">'+esc(inst.numero||'s/nº')+'</a> <span class="badge">'+esc(instShort(inst.instrumento))+'</span><div class="tiny muted">vig. '+fmtD(inst.vigenciaFim)+'</div>'
+      : '<span class="pill danger">sem vínculo</span>';
+    html+='<tr><td>'+esc(s.servidor||'')+'</td><td class="tiny">'+esc(s.orgaoOrigem||'')+'</td><td>'+instCell+'</td><td class="tiny">'+esc(s.nucleo||'')+'</td><td>'+esc(s.tipoCessao||'')+'</td><td>'+fmtD(s.dataFim)+'</td><td>'+(sit==='VENCIDA'?'<span class="pill danger">VENCIDA</span>':sit==='A VENCER'?'<span class="pill warn">A VENCER</span>':sit==='VIGENTE'?'<span class="pill ok">VIGENTE</span>':'<span class="muted">—</span>')+'</td></tr>';
   });
   html+='</table></div>'; return html;
 }
+function instShort(t){ return instrShort(t); }
 
 /* ============== MODAL (ficha) ============== */
 var DRAFT=null;
@@ -406,6 +444,18 @@ function drawModal(){
     h+='<div class="tiny muted" style="margin-bottom:6px">Parcelas liberadas</div>';
     (r.parcelas||[]).forEach(function(p,i){ h+='<div class="subitem"><span class="x" data-delparc="'+i+'">✕</span>Parcela '+esc(p.numero||(i+1))+' · '+fmtD(p.data)+' · '+fmtMoney(p.valor)+'</div>'; });
     h+='<button class="btn sec sm" id="addParc">+ Parcela</button>';
+  }
+
+  // servidores vinculados (cessão)
+  if(isCessao(r) && !isNew){
+    var lk=buildLinks().instrToSv[r.id]||[];
+    h+='<div class="section-t">Servidores cedidos vinculados ('+lk.length+')</div>';
+    if(lk.length){
+      lk.forEach(function(s){ var d=days(s.dataFim); var st=d==null?'':(d<0?' · <b style="color:#b3261e">cessão vencida</b>':(d<=90?' · <b style="color:#9a6705">vence em '+d+'d</b>':''));
+        h+='<div class="subitem">'+esc(s.servidor)+' <span class="tiny muted">('+esc(s.tipoCessao||'')+')</span><div class="tiny muted">'+esc(s.nucleo||'')+' · cessão '+fmtD(s.dataInicio)+' → '+fmtD(s.dataFim)+st+'</div></div>'; });
+    } else {
+      h+='<div class="tiny muted">Nenhum servidor casou com este partícipe. Vínculo automático por órgão de origem; verifique grafia se houver servidores esperados.</div>';
+    }
   }
 
   // aditivos
@@ -477,7 +527,7 @@ function saveRec(){
 function closeModal(){ document.getElementById('modalBg').classList.remove('on'); DRAFT=null; }
 
 /* ============== SYNC ONEDRIVE (File System Access API) ============== */
-var DIR=null, FH=null;
+var DIR=null, FH=null, FHSV=null;
 function idbGet(k){ return new Promise(function(res){ var rq=indexedDB.open('cfcc_conv',1); rq.onupgradeneeded=function(){rq.result.createObjectStore('h');}; rq.onsuccess=function(){var db=rq.result;try{var t=db.transaction('h','readonly').objectStore('h').get(k);t.onsuccess=function(){res(t.result||null);};t.onerror=function(){res(null);};}catch(e){res(null);}}; rq.onerror=function(){res(null);}; }); }
 function idbSet(k,v){ return new Promise(function(res){ var rq=indexedDB.open('cfcc_conv',1); rq.onupgradeneeded=function(){rq.result.createObjectStore('h');}; rq.onsuccess=function(){var db=rq.result;var t=db.transaction('h','readwrite').objectStore('h').put(v,k);t.onsuccess=function(){res(true);};t.onerror=function(){res(false);};}; rq.onerror=function(){res(false);}; }); }
 
@@ -486,17 +536,26 @@ async function connectDir(){
   try{ DIR=await window.showDirectoryPicker({mode:'readwrite'}); await idbSet('dir',DIR); await ensureFile(); await pullMerge(); setSync(true); render(); }
   catch(e){ /* cancelado */ }
 }
-async function ensureFile(){ try{ FH=await DIR.getFileHandle('convenios.json',{create:true}); }catch(e){ FH=null; } }
+async function ensureFile(){
+  try{ FH=await DIR.getFileHandle('convenios.json',{create:true}); }catch(e){ FH=null; }
+  try{ FHSV=await DIR.getFileHandle('servidores.json',{create:true}); }catch(e){ FHSV=null; }
+}
 async function tryRestore(){
   if(!window.showDirectoryPicker) return;
   var d=await idbGet('dir'); if(!d) return;
   try{ var perm=await d.queryPermission({mode:'readwrite'}); if(perm!=='granted'){ setSync(false,'Reautorizar'); return; } DIR=d; await ensureFile(); await pullMerge(); setSync(true); render(); }catch(e){}
 }
 async function pullMerge(){
-  if(!FH) return;
-  try{ var f=await FH.getFile(); var txt=await f.text(); if(!txt.trim()){ await pushAll(); return; }
-    var remote=JSON.parse(txt); mergeIn(remote); saveArr(KEY,DB);
-  }catch(e){ console.warn('pull',e); }
+  if(FH){
+    try{ var f=await FH.getFile(); var txt=await f.text(); if(!txt.trim()){ await pushAll(); }
+      else { var remote=JSON.parse(txt); mergeIn(remote); saveArr(KEY,DB); }
+    }catch(e){ console.warn('pull conv',e); }
+  }
+  if(FHSV){
+    try{ var fs=await FHSV.getFile(); var ts=await fs.text();
+      if(ts.trim()){ var rs=JSON.parse(ts); if(Array.isArray(rs)){ SV=rs; saveArr(KSV,SV); } }
+    }catch(e){ console.warn('pull serv',e); }
+  }
 }
 function mergeIn(remote){
   var t=tombs(); var byId={}; DB.forEach(function(r){byId[r.id]=r;});
@@ -504,9 +563,8 @@ function mergeIn(remote){
     if(!cur){ DB.push(rr); byId[rr.id]=rr; } else if((rr._v||0)>(cur._v||0)){ for(var k in rr) cur[k]=rr[k]; } });
 }
 async function pushAll(){
-  if(!FH){ return; }
-  try{ var w=await FH.createWritable(); var out=DB.filter(function(r){return tombs().indexOf(r.id)<0;}); await w.write(JSON.stringify(out,null,1)); await w.close(); }
-  catch(e){ console.warn('push',e); }
+  if(FH){ try{ var w=await FH.createWritable(); var out=DB.filter(function(r){return tombs().indexOf(r.id)<0;}); await w.write(JSON.stringify(out,null,1)); await w.close(); }catch(e){ console.warn('push conv',e); } }
+  if(FHSV){ try{ var w2=await FHSV.createWritable(); await w2.write(JSON.stringify(SV,null,1)); await w2.close(); }catch(e){ console.warn('push serv',e); } }
 }
 function setSync(on,label){ var d=document.getElementById('syncDot'),t=document.getElementById('syncTxt'),b=document.getElementById('btnSync');
   if(on){ d.classList.add('on'); t.textContent='OneDrive ✓'; b.textContent='Sincronizar agora'; }
@@ -521,7 +579,10 @@ function exportJSON(){
 function importJSON(){
   var inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
   inp.onchange=function(){ var f=inp.files[0]; if(!f)return; var rd=new FileReader();
-    rd.onload=function(){ try{ var arr=JSON.parse(rd.result); if(!Array.isArray(arr)) throw 0; mergeIn(arr); saveArr(KEY,DB); render(); alert('Importados/mesclados '+arr.length+' registros.'); }catch(e){ alert('Arquivo inválido.'); } };
+    rd.onload=function(){ try{ var arr=JSON.parse(rd.result); if(!Array.isArray(arr)) throw 0;
+      if(arr.length && arr[0] && arr[0].servidor!==undefined){ SV=arr; saveArr(KSV,SV); render(); alert('Importados '+arr.length+' servidores cedidos.'); }
+      else { mergeIn(arr); saveArr(KEY,DB); render(); alert('Importados/mesclados '+arr.length+' instrumentos.'); }
+    }catch(e){ alert('Arquivo inválido.'); } };
     rd.readAsText(f); };
   inp.click();
 }
@@ -547,6 +608,8 @@ function bindView(){
   var bn=document.getElementById('btnNew'); if(bn) bn.onclick=function(){openRec(null);};
   var be=document.getElementById('btnExp'); if(be) be.onclick=exportJSON;
   var fsv=document.getElementById('fsv'); if(fsv) fsv.oninput=function(){FSV=fsv.value; var v=document.getElementById('view'); v.innerHTML=renderServidores(); bindView(); var e=document.getElementById('fsv'); if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);} };
+  var fsvun=document.getElementById('fsvun'); if(fsvun) fsvun.onchange=function(){ FSV_UNMATCHED=fsvun.checked; var v=document.getElementById('view'); v.innerHTML=renderServidores(); bindView(); };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-openinst]'),function(a){ a.onclick=function(e){ e.preventDefault(); openRec(a.getAttribute('data-openinst')); }; });
 }
 document.getElementById('tabs').onclick=function(e){ var b=e.target.closest('button'); if(!b)return; VIEW=b.getAttribute('data-v');
   Array.prototype.forEach.call(this.children,function(c){c.classList.toggle('on',c===b);}); render(); };
