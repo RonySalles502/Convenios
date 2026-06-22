@@ -337,7 +337,7 @@ function renderLista(){
     html+='<tr class="grp"><td colspan="8">'+esc(c)+' · '+arr.length+'</td></tr>';
     arr.forEach(function(r){ var d=days(r.vigenciaFim); var s=sitEf(r);
       html+='<tr class="row" data-id="'+r.id+'">'
-        +'<td>'+esc(r.numero||'—')+(r._dup?' <span class="badge dup">DUP?</span>':'')+(r.transfereRecurso?' <span class="badge">R$</span>':'')+'</td>'
+        +'<td>'+esc(r.numero||'—')+(r._dup?' <span class="badge dup">DUP?</span>':'')+(r.transfereRecurso?' <span class="badge">R$</span>':'')+((r.formalizador==='PARCEIRO')?' <span class="badge" style="background:#f3edd6;color:#7a5200">parceiro</span>':'')+'</td>'
         +'<td>'+esc((r.participe||'').slice(0,46))+(r.cnpj?'<div class="tiny muted">'+esc(r.cnpj)+'</div>':'')+'</td>'
         +'<td>'+esc(instrShort(r.instrumento))+(r.prorrogavelAuto?'<div class="tiny muted">auto-prorrog.</div>':'')+'</td>'
         +'<td class="tiny">'+esc((r.objeto||'—').slice(0,52))+'</td>'
@@ -353,24 +353,29 @@ function renderLista(){
 function sel(id,val,opts){ return '<select id="'+id+'">'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(o[0]===val?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>'; }
 
 /* ============== RENDER: NUMERAÇÕES ============== */
+function seqOf(n){ var m=(n||'').trim().match(/^(?:N[°ºo]\.?\s*)?0*(\d{1,3})\s*\/\s*20\d{2}/); return m?parseInt(m[1],10):null; }
 function renderNumeracoes(){
   var rs=visiveis(); var yr=String(TODAY.getFullYear());
   var types=[['CONVENIO','Convênio'],['ACT','Acordo de Cooperação Técnica'],['TCT','Termo de Cooperação Técnica'],['CESSAO_IMOVEL','Cessão de Uso de Imóvel']];
   var html='<div class="panel"><h2>Controle de numerações '+yr+'</h2>'
-    +'<div class="desc">Sequencial anual por tipo de instrumento, derivado dos números já cadastrados. Sugestão do <b>próximo número</b> com base no maior sequencial encontrado para o ano corrente.</div>'
+    +'<div class="desc">Sequencial anual por tipo de instrumento. Conta <b>apenas instrumentos formalizados pela DPE</b>; instrumentos numerados pelo parceiro (numeração própria) são excluídos do cálculo.</div>'
     +'<div class="numgrid">';
+  var totParc=0;
   types.forEach(function(t){
-    var nums=rs.filter(function(r){return r.instrumento===t[0] && (r.ano===yr || (r.numero||'').indexOf('/'+yr)>=0);})
-      .map(function(r){ var m=(r.numero||'').match(/(\d+)\s*\/\s*'?20\d{2}|^[^\d]*(\d+)/); var seq=null; var mm=(r.numero||'').match(/(\d+)\s*\/\s*20\d{2}/); if(mm)seq=parseInt(mm[1],10); return seq; })
-      .filter(function(x){return x!=null;});
-    var max=nums.length?Math.max.apply(null,nums):0;
+    var doAno=rs.filter(function(r){ return r.instrumento===t[0] && (r.ano===yr || (r.numero||'').indexOf('/'+yr)>=0); });
+    var dpe=doAno.filter(function(r){ return (r.formalizador||'DPE')==='DPE'; });
+    var parc=doAno.length-dpe.length; totParc+=parc;
+    var seqs=dpe.map(function(r){return seqOf(r.numero);}).filter(function(x){return x!=null;}).sort(function(a,b){return a-b;});
+    var max=seqs.length?seqs[seqs.length-1]:0;
     var next=('00'+(max+1)).slice(-3)+'/'+yr;
     html+='<div class="numcard"><h4>'+esc(t[1])+'</h4>'
-      +'<div class="tiny muted">cadastrados em '+yr+': '+nums.length+' · último seq.: '+(max||'—')+'</div>'
+      +'<div class="tiny muted">DPE em '+yr+': '+dpe.length+(parc?' · parceiro: '+parc+' (excl.)':'')+'</div>'
+      +'<div class="tiny muted">sequenciais DPE: '+(seqs.length?seqs.map(function(x){return ('00'+x).slice(-3);}).join(', '):'—')+'</div>'
       +'<div class="tiny muted" style="margin:6px 0 2px">Próximo sugerido</div><div class="next">'+next+'</div></div>';
   });
   html+='</div>';
-  html+='<div class="alert i"><span>ℹ</span><div>A sugestão considera apenas os instrumentos já lançados nesta base. Confirme contra o controle oficial antes de formalizar — números reservados e não cadastrados aqui não entram no cálculo.</div></div>';
+  html+='<div class="alert i"><span>ℹ</span><div>O cálculo usa só o que está nesta base e formalizado pela DPE ('+totParc+' de parceiro excluído[s] no ano). '
+    +'O campo <b>Formalizador</b> de cada ficha define isso — ajuste se algum instrumento estiver classificado errado. Confirme contra o controle oficial antes de formalizar; números reservados e não lançados aqui não entram no cálculo.</div></div>';
   html+='</div>';
   return html;
 }
@@ -468,7 +473,7 @@ function pushSv(){ if(typeof FHSV!=='undefined' && FHSV){ (async function(){ try
 var DRAFT=null;
 function openRec(id){
   var r=id?DB.filter(function(x){return x.id===id;})[0]:null;
-  DRAFT= r?JSON.parse(JSON.stringify(r)):{id:'cv'+Date.now(),instrumento:'CONVENIO',categoria:'',transfereRecurso:false,papelDPE:null,aditivos:[],parcelas:[],servidores:[],_v:0,_new:true};
+  DRAFT= r?JSON.parse(JSON.stringify(r)):{id:'cv'+Date.now(),instrumento:'CONVENIO',categoria:'',transfereRecurso:false,papelDPE:null,formalizador:'DPE',aditivos:[],parcelas:[],servidores:[],_v:0,_new:true};
   drawModal();
   document.getElementById('modalBg').classList.add('on');
 }
@@ -496,10 +501,10 @@ function drawModal(){
     +fld('', '<div class="tiny muted" style="padding-top:22px">Situação efetiva: '+sitPill(sitEf(r))+'</div>')+'</div>';
 
   h+='<div class="section-t">Tramitação e processos</div>';
-  h+='<div class="frow3">'+fld('Responsável (pessoa)', inp('m_resp',r.responsavel))
-    +fld('Tramitação', selRaw('m_tramit',r.tramitacao||'',[['','—'],['SOBRESTADO','Sobrestado'],['EM TRAMITAÇÃO','Em tramitação'],['PENDENTE','Pendente']]))
-    +fld('Nº processo SEI', inp('m_sei',r.sei))+'</div>';
-  h+='<div class="frow">'+fld('Nº processo físico', inp('m_pf',r.processoFisico))+fld('Obs. Portal Transparência', inp('m_obst',r.obsTransparencia))+'</div>';
+  h+='<div class="frow3">'+fld('Formalizador / numeração', selRaw('m_formal', r.formalizador||'DPE',[['DPE','DPE (entra no controle)'],['PARCEIRO','Parceiro (numeração própria)']]))
+    +fld('Responsável (pessoa)', inp('m_resp',r.responsavel))
+    +fld('Tramitação', selRaw('m_tramit',r.tramitacao||'',[['','—'],['SOBRESTADO','Sobrestado'],['EM TRAMITAÇÃO','Em tramitação'],['PENDENTE','Pendente']]))+'</div>';
+  h+='<div class="frow3">'+fld('Nº processo SEI', inp('m_sei',r.sei))+fld('Nº processo físico', inp('m_pf',r.processoFisico))+fld('Obs. Portal Transparência', inp('m_obst',r.obsTransparencia))+'</div>';
   h+=fld('Observações / status', ta('m_obs',r.observacoes));
 
   // transferência de recursos
@@ -545,7 +550,7 @@ function drawModal(){
   bindDraft('m_vconc','valorConcedente',true); bindDraft('m_vcontr','valorContrapartida',true);
   // selects que redesenham (mudam estrutura)
   bindSel('m_instrumento','instrumento'); bindSel('m_categoria','categoria'); bindSel('m_sit','situacaoGravada');
-  bindSel('m_tramit','tramitacao'); bindSel('m_papel','papelDPE');
+  bindSel('m_tramit','tramitacao'); bindSel('m_papel','papelDPE'); bindSel('m_formal','formalizador',function(v){return v;});
   bindSel('m_auto','prorrogavelAuto',function(v){return v==='1';});
   bindSel('m_tr','transfereRecurso',function(v){return v==='1';},true);
 

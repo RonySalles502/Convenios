@@ -22,6 +22,12 @@ técnica (ACT), termos de cooperação técnica (TCT) e cessões de uso de imóv
   além de editar a vigência da cessão. O selo `manual` identifica vínculos sobrepostos.
 - Edições de servidores são gravadas em `servidores.json` na pasta sincronizada.
 
+## Controle de numerações
+- Conta **apenas instrumentos formalizados pela DPE** (campo `Formalizador` = DPE na ficha).
+  Instrumentos numerados pelo parceiro (`Formalizador` = Parceiro) têm numeração própria e
+  ficam fora do cálculo do próximo sequencial. A semente classifica pelo ledger oficial 2026
+  (autoridade) e, no restante, pelo formato do número; revise pela ficha quando necessário.
+
 ## Hospedagem
 - GitHub Pages (só este diretório). Caminhos relativos (`./`) funcionam em raiz ou subpasta.
 - `file://` não serve (bloqueia SW e File System Access) — usar `http://localhost` ou Pages.
